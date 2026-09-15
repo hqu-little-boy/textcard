@@ -5,26 +5,35 @@
   author: "",
   source: "",
   font-family: "Sans-Serif",
+  font-size: 32pt,
+  line-height: 1.6em,
+  bg-color: none,
+  first-line-indent: 0pt,
+  justify: false,
   body
 ) = {
+  let default-bg = rgb("#0d1117")
+  let page-bg = if bg-color != none { bg-color } else { default-bg }
   set page(
     width: width,
     height: height,
     margin: 80pt,
-    fill: rgb("#0d1117"),
+    fill: page-bg,
   )
   set text(
     font: (font-family, "Droid Sans Fallback"),
-    size: 32pt,
+    size: font-size,
     fill: rgb("#c9d1d9"),
   )
   set par(
-    leading: 1.6em,
+    leading: line-height,
+    justify: justify,
+    first-line-indent: first-line-indent,
   )
 
   // Title (optional)
   if title != "" {
-    text(size: 48pt, weight: "bold", fill: rgb("#58a6ff"), title)
+    text(size: font-size * 1.5, weight: "bold", fill: rgb("#58a6ff"), title)
     v(30pt)
   }
 
@@ -33,21 +42,39 @@
 
   // Footer (optional)
   if author != "" or source != "" {
-    align(bottom)[
-      #v(1fr)
-      #grid(
+    if height == auto {
+      v(40pt)
+      grid(
         columns: (1fr, auto),
         align(left + horizon)[
           #if source != "" [
-            #text(size: 20pt, fill: rgb("#6e7681"))[#source]
+            #text(size: font-size * 0.65, fill: rgb("#6e7681"))[#source]
           ]
         ],
         align(right + horizon)[
           #if author != "" [
-            #text(size: 24pt, fill: rgb("#8b949e"))[\@#author]
+            #text(size: font-size * 0.75, fill: rgb("#8b949e"))[\@#author]
           ]
         ]
       )
-    ]
+    } else {
+      align(bottom)[
+        #v(1fr)
+        #grid(
+          columns: (1fr, auto),
+          align(left + horizon)[
+            #if source != "" [
+              #text(size: font-size * 0.65, fill: rgb("#6e7681"))[#source]
+            ]
+          ],
+          align(right + horizon)[
+            #if author != "" [
+              #text(size: font-size * 0.75, fill: rgb("#8b949e"))[\@#author]
+            ]
+          ]
+        )
+      ]
+    }
   }
 }
+

@@ -5,6 +5,9 @@ export interface CardConfig {
   lineHeight: number;
   fontFamily: string;
   aspectRatio: '1:1' | '3:4' | '16:9' | 'auto';
+  autoMode?: 'fixed-width' | 'fixed-height';
+  customWidth?: number;
+  customHeight?: number;
   bgColor: string;
   showTitle: boolean;
   showAuthor: boolean;

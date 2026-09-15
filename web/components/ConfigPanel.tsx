@@ -78,6 +78,93 @@ export default function ConfigPanel({ config, setConfig }: ConfigPanelProps) {
             </button>
           ))}
         </div>
+
+        {config.aspectRatio === 'auto' && (
+          <div className="p-3 bg-zinc-950/80 border border-zinc-800 rounded-lg space-y-3 mt-3">
+            <div>
+              <div className="text-xs font-medium text-zinc-300 mb-1.5 flex items-center justify-between">
+                <span>自适应调节维度</span>
+                <span className="text-[10px] text-emerald-400 font-normal">正文不截断 · 完整排版</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => updateConfig('autoMode', 'fixed-width')}
+                  className={`py-1.5 px-2 text-xs rounded border transition-all ${
+                    config.autoMode !== 'fixed-height'
+                      ? 'border-indigo-500 bg-indigo-500/20 text-indigo-200 font-medium shadow-sm'
+                      : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700'
+                  }`}
+                >
+                  定宽 · 高度自适应
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateConfig('autoMode', 'fixed-height')}
+                  className={`py-1.5 px-2 text-xs rounded border transition-all ${
+                    config.autoMode === 'fixed-height'
+                      ? 'border-indigo-500 bg-indigo-500/20 text-indigo-200 font-medium shadow-sm'
+                      : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700'
+                  }`}
+                >
+                  定高 · 宽度自适应
+                </button>
+              </div>
+            </div>
+
+            {config.autoMode !== 'fixed-height' ? (
+              <div>
+                <div className="flex justify-between mb-1.5">
+                  <label className="text-xs text-zinc-300">调整卡片宽度</label>
+                  <span className="text-xs text-indigo-400 font-mono font-medium">{config.customWidth || 1080}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="480"
+                  max="1600"
+                  step="20"
+                  value={config.customWidth || 1080}
+                  onChange={(e) => updateConfig('customWidth', parseInt(e.target.value))}
+                  className="w-full accent-indigo-500"
+                />
+                <div className="flex justify-between text-[10px] text-zinc-500 mt-1">
+                  <button type="button" className="hover:text-zinc-300" onClick={() => updateConfig('customWidth', 640)}>小巧 640</button>
+                  <button type="button" className="hover:text-zinc-300" onClick={() => updateConfig('customWidth', 800)}>适中 800</button>
+                  <button type="button" className="hover:text-zinc-300 font-medium text-zinc-400" onClick={() => updateConfig('customWidth', 1080)}>标准 1080</button>
+                  <button type="button" className="hover:text-zinc-300" onClick={() => updateConfig('customWidth', 1440)}>宽屏 1440</button>
+                </div>
+                <p className="text-[11px] text-zinc-400 mt-1.5 leading-relaxed bg-zinc-900/60 p-1.5 rounded">
+                  💡 高度随正文长短自动向下延展，文字绝不截断。
+                </p>
+              </div>
+            ) : (
+              <div>
+                <div className="flex justify-between mb-1.5">
+                  <label className="text-xs text-zinc-300">调整卡片高度</label>
+                  <span className="text-xs text-indigo-400 font-mono font-medium">{config.customHeight || 1440}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="600"
+                  max="2400"
+                  step="20"
+                  value={config.customHeight || 1440}
+                  onChange={(e) => updateConfig('customHeight', parseInt(e.target.value))}
+                  className="w-full accent-indigo-500"
+                />
+                <div className="flex justify-between text-[10px] text-zinc-500 mt-1">
+                  <button type="button" className="hover:text-zinc-300" onClick={() => updateConfig('customHeight', 800)}>紧凑 800</button>
+                  <button type="button" className="hover:text-zinc-300" onClick={() => updateConfig('customHeight', 1080)}>标准 1080</button>
+                  <button type="button" className="hover:text-zinc-300 font-medium text-zinc-400" onClick={() => updateConfig('customHeight', 1440)}>长图 1440</button>
+                  <button type="button" className="hover:text-zinc-300" onClick={() => updateConfig('customHeight', 1920)}>超长 1920</button>
+                </div>
+                <p className="text-[11px] text-zinc-400 mt-1.5 leading-relaxed bg-zinc-900/60 p-1.5 rounded">
+                  💡 宽度随指定高度自动扩展排版，文字绝不截断。
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="space-y-3 pt-2 border-t border-zinc-800">

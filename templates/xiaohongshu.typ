@@ -5,21 +5,30 @@
   author: "",
   source: "",
   font-family: "Sans-Serif",
+  font-size: 28pt,
+  line-height: 1.5em,
+  bg-color: none,
+  first-line-indent: 0pt,
+  justify: false,
   body
 ) = {
+  let default-bg = rgb("#FFF3CD")
+  let page-bg = if bg-color != none { bg-color } else { default-bg }
   set page(
     width: width,
     height: height,
     margin: 0pt,
-    fill: rgb("#FFF3CD"),
+    fill: page-bg,
   )
   set text(
     font: (font-family, "Droid Sans Fallback"),
-    size: 28pt,
+    size: font-size,
     fill: rgb("#1a1a1a"),
   )
   set par(
-    leading: 1.5em,
+    leading: line-height,
+    justify: justify,
+    first-line-indent: first-line-indent,
   )
 
   // Top header area (only if title is provided)
@@ -30,7 +39,7 @@
       inset: (x: 60pt, y: 44pt)
     )[
       #align(center + horizon)[
-        #text(size: 46pt, weight: "bold", fill: white, title)
+        #text(size: font-size * 1.6, weight: "bold", fill: white, title)
       ]
     ]
   }
@@ -40,20 +49,20 @@
     left: 60pt,
     right: 60pt,
     top: if title != "" { 48pt } else { 80pt },
-    bottom: if author != "" or source != "" { 40pt } else { 80pt }
+    bottom: if (author != "" or source != "") and height == auto { 20pt } else if author != "" or source != "" { 40pt } else { 80pt }
   )[
     #body
   ]
 
   // Footer (only if author or source is provided)
   if author != "" or source != "" {
-    align(bottom)[
-      #pad(x: 60pt, y: 36pt)[
+    if height == auto {
+      pad(x: 60pt, bottom: 40pt)[
         #grid(
           columns: (1fr, auto),
           align(left + horizon)[
             #if source != "" [
-              #text(size: 22pt, fill: rgb("#777777"))[来源: #source]
+              #text(size: font-size * 0.75, fill: rgb("#777777"))[来源: #source]
             ]
           ],
           align(right + horizon)[
@@ -63,13 +72,39 @@
                 gutter: 14pt,
                 circle(radius: 16pt, fill: rgb("#FF6B6B")),
                 align(horizon)[
-                  #text(size: 24pt, weight: "bold", author)
+                  #text(size: font-size * 0.85, weight: "bold", author)
                 ]
               )
             ]
           ]
         )
       ]
-    ]
+    } else {
+      align(bottom)[
+        #pad(x: 60pt, y: 36pt)[
+          #grid(
+            columns: (1fr, auto),
+            align(left + horizon)[
+              #if source != "" [
+                #text(size: font-size * 0.75, fill: rgb("#777777"))[来源: #source]
+              ]
+            ],
+            align(right + horizon)[
+              #if author != "" [
+                #grid(
+                  columns: (auto, auto),
+                  gutter: 14pt,
+                  circle(radius: 16pt, fill: rgb("#FF6B6B")),
+                  align(horizon)[
+                    #text(size: font-size * 0.85, weight: "bold", author)
+                  ]
+                )
+              ]
+            ]
+          )
+        ]
+      ]
+    }
   }
 }
+

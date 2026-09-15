@@ -5,22 +5,30 @@
   author: "",
   source: "",
   font-family: "Serif",
+  font-size: 20pt,
+  line-height: 1.4em,
+  bg-color: none,
+  first-line-indent: 2em,
+  justify: true,
   body
 ) = {
+  let default-bg = rgb("#f5f0e1")
+  let page-bg = if bg-color != none { bg-color } else { default-bg }
   set page(
     width: width,
     height: height,
     margin: (x: 60pt, y: 70pt),
-    fill: rgb("#f5f0e1"),
+    fill: page-bg,
   )
   set text(
     font: (font-family, "Droid Sans Fallback"),
-    size: 20pt,
+    size: font-size,
     fill: rgb("#222222"),
   )
   set par(
-    justify: true,
-    leading: 1.4em,
+    justify: justify,
+    leading: line-height,
+    first-line-indent: first-line-indent,
   )
 
   // Header line (if title or author/source is provided)
@@ -34,7 +42,7 @@
   // Title (optional)
   if title != "" {
     align(center)[
-      #text(size: 54pt, weight: "bold", title)
+      #text(size: font-size * 2.2, weight: "bold", title)
     ]
     v(18pt)
   }
@@ -59,7 +67,12 @@
   }
 
   // Body
-  columns(2, gutter: 30pt)[
-    #body
-  ]
+  if height == auto {
+    body
+  } else {
+    columns(2, gutter: 30pt)[
+      #body
+    ]
+  }
 }
+

@@ -72,21 +72,37 @@ export async function initTextcardWasm() {
 function buildConfigJson(title: string, author: string, source: string, config: CardConfig) {
   let width = 1080
   let height = 1440
+  let auto_dimension: 'height' | 'width' | 'none' = 'none'
 
   if (config.aspectRatio === '1:1') {
     width = 1080
     height = 1080
+    auto_dimension = 'none'
   } else if (config.aspectRatio === '16:9') {
     width = 1920
     height = 1080
+    auto_dimension = 'none'
   } else if (config.aspectRatio === '3:4') {
     width = 1080
     height = 1440
+    auto_dimension = 'none'
+  } else if (config.aspectRatio === 'auto') {
+    if (config.autoMode === 'fixed-height') {
+      auto_dimension = 'width'
+      height = config.customHeight || 1440
+      width = 0
+    } else {
+      // Default: fixed-width, auto-height
+      auto_dimension = 'height'
+      width = config.customWidth || 1080
+      height = 0
+    }
   }
 
   return JSON.stringify({
     width,
     height,
+    auto_dimension,
     title: config.showTitle ? title.trim() : '',
     author: config.showAuthor ? author.trim() : '',
     source: config.showSource ? source.trim() : '',
