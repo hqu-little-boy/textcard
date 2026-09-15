@@ -70,18 +70,66 @@ export default function ExportBar({ content, title, author, source = '', theme, 
   const handleCopyClipboard = async () => {
     setIsExporting(true)
     setErrorMsg(null)
+    if (typeof window !== 'undefined') {
+      window.focus()
+    }
+
+    const pngPromise = renderCardToPng(content, title, author, source, theme, config)
+
     try {
-      const blob = await renderCardToPng(content, title, author, source, theme, config)
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          'image/png': blob,
-        }),
-      ])
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2500)
+      // 策略 1 (推荐规范): 传入 Promise<Blob> 给 ClipboardItem
+      // 在用户点击手势当前事件循环同步调用 navigator.clipboard.write，避免异步耗时后丢失激活焦点
+      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+        try {
+          const item = new ClipboardItem({
+            'image/png': pngPromise,
+          })
+          await navigator.clipboard.write([item])
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2500)
+          return
+        } catch (promiseErr) {
+          console.warn('ClipboardItem Promise write failed, trying resolved blob...', promiseErr)
+        }
+      }
+
+      // 策略 2: 等待渲染完毕后尝试再次写入
+      const blob = await pngPromise
+      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+        if (typeof window !== 'undefined') window.focus()
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'image/png': blob,
+          }),
+        ])
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2500)
+        return
+      }
+
+      throw new Error('当前浏览器不支持图片复制到剪贴板')
     } catch (err: any) {
       console.error('Clipboard copy failed:', err)
-      setErrorMsg('复制到剪贴板失败，您的浏览器可能不支持或未授权')
+
+      // 策略 3: 终极降级保障
+      // 若因浏览器窗口失焦 (Document is not focused) 或权限策略导致剪贴板被拦截，
+      // 自动无缝转为下载高清 PNG 文件，不让用户操作落空
+      try {
+        const blob = await pngPromise
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = getFileName('png')
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+
+        setErrorMsg('浏览器安全策略限制了后台写入剪贴板（窗口未聚焦），已为您自动保存下载高清 PNG 文件！')
+        setTimeout(() => setErrorMsg(null), 5000)
+      } catch (dlErr) {
+        setErrorMsg('复制到剪贴板失败，请直接点击左侧「下载高清 PNG」保存图片。')
+      }
     } finally {
       setIsExporting(false)
     }
@@ -90,7 +138,7 @@ export default function ExportBar({ content, title, author, source = '', theme, 
   return (
     <div className="mt-6 border-t border-zinc-800 pt-5">
       {errorMsg && (
-        <div className="mb-3 p-2.5 bg-red-950/40 border border-red-800/60 rounded-lg flex items-center gap-2 text-xs text-red-300">
+        <div className="mb-3 p-2.5 bg-amber-950/40 border border-amber-800/60 rounded-lg flex items-center gap-2 text-xs text-amber-200">
           <AlertCircle size={14} className="shrink-0" />
           <span>{errorMsg}</span>
         </div>
