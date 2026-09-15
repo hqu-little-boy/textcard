@@ -14,7 +14,7 @@
     fill: rgb("#f5f0e1"),
   )
   set text(
-    font: font-family,
+    font: (font-family, "Droid Sans Fallback"),
     size: 20pt,
     fill: rgb("#222222"),
   )

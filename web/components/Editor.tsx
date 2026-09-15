@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ThemeSelector from './ThemeSelector'
 import ConfigPanel from './ConfigPanel'
 import CardPreview from './CardPreview'
 import ExportBar from './ExportBar'
 import { CardConfig, Theme } from './types'
+import { initTextcardWasm } from '@/lib/textcard-wasm'
 import { Type, Link as LinkIcon, Sparkles, Loader2, CheckCircle2, AlertCircle, Bookmark, XCircle } from 'lucide-react'
 
 const PRESETS = [
@@ -94,6 +95,11 @@ export default function Editor() {
     firstLineIndent: true,
     justify: true,
   })
+
+  useEffect(() => {
+    // Preload WASM engine and CJK font in background
+    initTextcardWasm().catch((err) => console.warn('Preloading WASM failed:', err))
+  }, [])
 
   const handleExtractUrl = async () => {
     if (!url.trim()) return

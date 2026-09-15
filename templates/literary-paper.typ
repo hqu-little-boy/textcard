@@ -14,7 +14,7 @@
     fill: rgb("#fdfbf7"),
   )
   set text(
-    font: font-family,
+    font: (font-family, "Droid Sans Fallback"),
     size: 24pt,
     fill: rgb("#333333"),
   )
@@ -24,7 +24,7 @@
     first-line-indent: 2em,
   )
 
-  // Top border (only if title or author is set, or as a subtle book ornament)
+  // Top border
   line(length: 100%, stroke: 0.5pt + rgb("#d4cbb3"))
   v(20pt)
 

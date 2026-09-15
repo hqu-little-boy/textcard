@@ -2,19 +2,49 @@ import { CardConfig, Theme } from '@/components/types'
 
 let wasmInstance: any = null
 let initPromise: Promise<any> | null = null
+let fontsLoaded = false
+let fontLoadingPromise: Promise<void> | null = null
 
-function getWasmUrl(): string {
-  if (typeof window === 'undefined') return '/pkg/textcard_wasm_bg.wasm'
+function getAssetUrl(relPath: string): string {
+  if (typeof window === 'undefined') return `/${relPath}`
   const origin = window.location.origin
   const path = window.location.pathname.replace(/\/$/, '')
   if (!path || path === '/') {
-    return `${origin}/pkg/textcard_wasm_bg.wasm`
+    return `${origin}/${relPath}`
   }
-  return `${origin}${path}/pkg/textcard_wasm_bg.wasm`
+  return `${origin}${path}/${relPath}`
+}
+
+function getWasmUrl(): string {
+  return getAssetUrl('pkg/textcard_wasm_bg.wasm')
+}
+
+export async function ensureFontsLoaded(wasm: any): Promise<void> {
+  if (fontsLoaded) return
+  if (!fontLoadingPromise) {
+    fontLoadingPromise = (async () => {
+      try {
+        const fontUrl = getAssetUrl('fonts/cjk-fallback.ttf')
+        const res = await fetch(fontUrl)
+        if (!res.ok) {
+          throw new Error(`Failed to load CJK font from ${fontUrl}: ${res.status}`)
+        }
+        const buffer = await res.arrayBuffer()
+        wasm.load_font('Droid Sans Fallback', new Uint8Array(buffer))
+        fontsLoaded = true
+        console.log('CJK font loaded into Typst WASM engine successfully!')
+      } catch (e) {
+        console.error('Error loading font into Typst:', e)
+        fontLoadingPromise = null
+        throw e
+      }
+    })()
+  }
+  return fontLoadingPromise
 }
 
 export async function initTextcardWasm() {
-  if (wasmInstance) return wasmInstance
+  if (wasmInstance && fontsLoaded) return wasmInstance
   if (!initPromise) {
     initPromise = (async () => {
       try {
@@ -24,6 +54,10 @@ export async function initTextcardWasm() {
         const wasmUrl = getWasmUrl()
         await mod.default(wasmUrl)
         mod.init()
+
+        // Asynchronously preload font before returning
+        await ensureFontsLoaded(mod)
+
         wasmInstance = mod
         return mod
       } catch (err) {
