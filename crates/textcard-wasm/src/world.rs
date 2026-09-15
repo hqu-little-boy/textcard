@@ -88,11 +88,18 @@ impl World for CardWorld {
     }
 
     fn today(&self, _offset: Option<Duration>) -> Option<Datetime> {
-        let now = js_sys::Date::new_0();
-        Datetime::from_ymd(
-            now.get_full_year() as i32,
-            (now.get_month() + 1) as u8, // JS months are 0-indexed
-            now.get_date() as u8,
-        )
+        #[cfg(target_arch = "wasm32")]
+        {
+            let now = js_sys::Date::new_0();
+            Datetime::from_ymd(
+                now.get_full_year() as i32,
+                (now.get_month() + 1) as u8, // JS months are 0-indexed
+                now.get_date() as u8,
+            )
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            Datetime::from_ymd(2026, 9, 15)
+        }
     }
 }

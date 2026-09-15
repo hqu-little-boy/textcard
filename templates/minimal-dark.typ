@@ -6,7 +6,8 @@
   source: "",
   font-family: "Sans-Serif",
   font-size: 32pt,
-  line-height: 1.6em,
+  line-height: 0.75em,
+  par-spacing: 1.8em,
   bg-color: none,
   first-line-indent: 0pt,
   justify: false,
@@ -27,6 +28,7 @@
   )
   set par(
     leading: line-height,
+    spacing: par-spacing,
     justify: justify,
     first-line-indent: first-line-indent,
   )

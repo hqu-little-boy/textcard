@@ -16,7 +16,7 @@ function getAssetUrl(relPath: string): string {
 }
 
 function getWasmUrl(): string {
-  return getAssetUrl('pkg/textcard_wasm_v2.wasm?v=2.2')
+  return getAssetUrl('pkg/textcard_wasm_v2.wasm?v=2.3')
 }
 
 export async function ensureFontsLoaded(wasm: any): Promise<void> {

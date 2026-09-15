@@ -48,7 +48,8 @@ fn find_optimal_width(
     source: &str,
     font_family: &str,
     font_size: f64,
-    line_height: f64,
+    leading_em: f64,
+    spacing_em: f64,
     bg_color_expr: &str,
     first_line_indent: &str,
     justify: &str,
@@ -70,7 +71,8 @@ fn find_optimal_width(
   source: "{source}",
   font-family: "{font_family}",
   font-size: {font_size}pt,
-  line-height: {line_height}em,
+  line-height: {leading_em}em,
+  par-spacing: {spacing_em}em,
   bg-color: {bg_color_expr},
   first-line-indent: {first_line_indent},
   justify: {justify},
@@ -86,7 +88,8 @@ fn find_optimal_width(
             source = source,
             font_family = font_family,
             font_size = font_size,
-            line_height = line_height,
+            leading_em = leading_em,
+            spacing_em = spacing_em,
             bg_color_expr = bg_color_expr,
             first_line_indent = first_line_indent,
             justify = justify,
@@ -111,6 +114,35 @@ fn find_optimal_width(
     }
 
     best_width
+}
+
+fn format_content_for_typst(content: &str) -> String {
+    let trimmed = content.trim();
+    if trimmed.is_empty() {
+        return "请输入正文内容...".to_string();
+    }
+
+    // Escape '#' so Typst doesn't interpret it as code
+    let escaped = content.replace('#', "\\#");
+    let normalized = escaped.replace("\r\n", "\n").replace('\r', "\n");
+
+    // Split paragraphs by 2 or more consecutive newlines
+    let paragraphs: Vec<&str> = normalized.split("\n\n").collect();
+    let mut formatted_paragraphs = Vec::new();
+
+    for p in paragraphs {
+        if p.is_empty() {
+            formatted_paragraphs.push(String::new());
+            continue;
+        }
+        // Within each paragraph, single newlines represent line breaks typed by the user (e.g. poetry, list items).
+        // In Typst, " \\\n" creates a line break within the paragraph without starting a new paragraph.
+        let lines: Vec<&str> = p.split('\n').collect();
+        let formatted_p = lines.join(" \\\n");
+        formatted_paragraphs.push(formatted_p);
+    }
+
+    formatted_paragraphs.join("\n\n")
 }
 
 fn prepare_world_for_render(
@@ -138,10 +170,21 @@ fn prepare_world_for_render(
     let author_escaped = author.replace('\\', "\\\\").replace('"', "\\\"");
     let source_escaped = source.replace('\\', "\\\\").replace('"', "\\\"");
     let font_family_escaped = font_family.replace('\\', "\\\\").replace('"', "\\\"");
-    let safe_content = if content.trim().is_empty() {
-        "请输入正文内容...".to_string()
-    } else {
-        content.replace('#', "\\#")
+    let safe_content = format_content_for_typst(content);
+
+    let font_size = config.font_size.unwrap_or(24.0);
+    let raw_line_height = config.line_height.unwrap_or(1.8);
+    // In Typst, `leading` is the extra spacing BETWEEN lines, not total line-height multiplier.
+    // To match user intuition of line-height factor (e.g. 1.8), leading should be (line_height - 1.0) * 0.9.
+    // Inter-paragraph spacing (spacing_em) must be significantly larger than leading_em.
+    let leading_em = ((raw_line_height - 1.0) * 0.9).max(0.35);
+    let spacing_em = (leading_em + 0.95).max(1.5);
+
+    let first_line_indent = if config.first_line_indent.unwrap_or(true) { "2em" } else { "0pt" };
+    let justify = if config.justify.unwrap_or(true) { "true" } else { "false" };
+    let bg_color_expr = match &config.bg_color {
+        Some(c) if !c.trim().is_empty() => format!("rgb(\"{}\")", c.trim()),
+        _ => "none".to_string(),
     };
 
     let (width_expr, height_expr) = match config.auto_dimension.as_deref() {
@@ -151,14 +194,6 @@ fn prepare_world_for_render(
         }
         Some("width") => {
             let target_h = config.height.filter(|&v| v > 20.0).unwrap_or(1440.0);
-            let font_size = config.font_size.unwrap_or(24.0);
-            let line_height = config.line_height.unwrap_or(1.8);
-            let first_line_indent = if config.first_line_indent.unwrap_or(true) { "2em" } else { "0pt" };
-            let justify = if config.justify.unwrap_or(true) { "true" } else { "false" };
-            let bg_color_expr = match &config.bg_color {
-                Some(c) if !c.trim().is_empty() => format!("rgb(\"{}\")", c.trim()),
-                _ => "none".to_string(),
-            };
 
             let best_w = find_optimal_width(
                 &mut world,
@@ -170,7 +205,8 @@ fn prepare_world_for_render(
                 &source_escaped,
                 &font_family_escaped,
                 font_size,
-                line_height,
+                leading_em,
+                spacing_em,
                 &bg_color_expr,
                 first_line_indent,
                 justify,
@@ -184,15 +220,6 @@ fn prepare_world_for_render(
         }
     };
 
-    let font_size = config.font_size.unwrap_or(24.0);
-    let line_height = config.line_height.unwrap_or(1.8);
-    let first_line_indent = if config.first_line_indent.unwrap_or(true) { "2em" } else { "0pt" };
-    let justify = if config.justify.unwrap_or(true) { "true" } else { "false" };
-    let bg_color_expr = match &config.bg_color {
-        Some(c) if !c.trim().is_empty() => format!("rgb(\"{}\")", c.trim()),
-        _ => "none".to_string(),
-    };
-
     let typst_source = format!(
         r#"
 #import "/templates/{template}.typ": *
@@ -204,7 +231,8 @@ fn prepare_world_for_render(
   source: "{source}",
   font-family: "{font_family}",
   font-size: {font_size}pt,
-  line-height: {line_height}em,
+  line-height: {leading_em}em,
+  par-spacing: {spacing_em}em,
   bg-color: {bg_color_expr},
   first-line-indent: {first_line_indent},
   justify: {justify},
@@ -220,7 +248,8 @@ fn prepare_world_for_render(
         source = source_escaped,
         font_family = font_family_escaped,
         font_size = font_size,
-        line_height = line_height,
+        leading_em = leading_em,
+        spacing_em = spacing_em,
         bg_color_expr = bg_color_expr,
         first_line_indent = first_line_indent,
         justify = justify,
@@ -340,4 +369,81 @@ pub fn render_page(content: &str, template: &str, config_json: &str, page_idx: u
 
     pixmap.encode_png()
         .map_err(|e| JsValue::from_str(&format!("PNG encoding error: {}", e)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_content_soft_breaks_and_paragraphs() {
+        let input = "第一行\n第二行\n\n第二段第一行\n第二段第二行";
+        let output = format_content_for_typst(input);
+        assert_eq!(output, "第一行 \\\n第二行\n\n第二段第一行 \\\n第二段第二行");
+    }
+
+    #[test]
+    fn test_format_content_escapes_hash() {
+        let input = "标签 #tag 还有 #123";
+        let output = format_content_for_typst(input);
+        assert_eq!(output, "标签 \\#tag 还有 \\#123");
+    }
+
+    #[test]
+    fn test_format_content_empty() {
+        assert_eq!(format_content_for_typst("   "), "请输入正文内容...");
+    }
+
+    #[test]
+    fn test_prepare_world_and_compile_all_templates() {
+        let mut world = get_world();
+        load_templates(&mut world);
+        drop(world);
+
+        let sample_text = "床前明月光，\n疑是地上霜。\n\n举头望明月，\n低头思故乡。";
+        let config_json = r#"{
+            "width": 1080,
+            "height": 1440,
+            "fontSize": 24,
+            "lineHeight": 1.8,
+            "showTitle": true,
+            "title": "静夜思",
+            "showAuthor": true,
+            "author": "李白",
+            "showSource": true,
+            "source": "唐诗三百首"
+        }"#;
+
+        for template in ["literary-paper", "xiaohongshu", "minimal-dark", "newspaper"] {
+            let res = prepare_world_for_render(sample_text, template, config_json);
+            assert!(res.is_ok(), "Failed prepare for template {}: {:?}", template, res.err());
+
+            let world = get_world();
+            let doc = typst::compile::<PagedDocument>(&*world);
+            assert!(doc.output.is_ok(), "Compilation error for {}: {:?}", template, doc.output.err());
+            let paged = doc.output.unwrap();
+            assert!(!paged.pages().is_empty(), "No pages for {}", template);
+        }
+    }
+
+    #[test]
+    fn test_auto_dimension_compiles() {
+        let mut world = get_world();
+        load_templates(&mut world);
+        drop(world);
+
+        let sample_text = "长篇文字测试第一段。\n第二行。\n\n第二段。";
+        let config_json = r#"{
+            "autoDimension": "height",
+            "width": 800,
+            "fontSize": 20,
+            "lineHeight": 1.6
+        }"#;
+
+        let res = prepare_world_for_render(sample_text, "literary-paper", config_json);
+        assert!(res.is_ok());
+        let world = get_world();
+        let doc = typst::compile::<PagedDocument>(&*world);
+        assert!(doc.output.is_ok());
+    }
 }
