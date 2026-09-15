@@ -16,7 +16,7 @@ function getAssetUrl(relPath: string): string {
 }
 
 function getWasmUrl(): string {
-  return getAssetUrl('pkg/textcard_wasm_bg.wasm')
+  return getAssetUrl('pkg/textcard_wasm_v2.wasm?v=2.2')
 }
 
 export async function ensureFontsLoaded(wasm: any): Promise<void> {
@@ -90,12 +90,12 @@ function buildConfigJson(title: string, author: string, source: string, config: 
     if (config.autoMode === 'fixed-height') {
       auto_dimension = 'width'
       height = config.customHeight || 1440
-      width = 0
+      width = null as any
     } else {
       // Default: fixed-width, auto-height
       auto_dimension = 'height'
       width = config.customWidth || 1080
-      height = 0
+      height = null as any
     }
   }
 

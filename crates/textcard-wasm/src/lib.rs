@@ -144,40 +144,44 @@ fn prepare_world_for_render(
         content.replace('#', "\\#")
     };
 
-    let (width_expr, height_expr) = if config.auto_dimension.as_deref() == Some("height") || config.height == Some(0.0) {
-        let w = config.width.unwrap_or(1080.0).max(200.0);
-        (format!("{}pt", w), "auto".to_string())
-    } else if config.auto_dimension.as_deref() == Some("width") || config.width == Some(0.0) {
-        let target_h = config.height.unwrap_or(1440.0).max(200.0);
-        let font_size = config.font_size.unwrap_or(24.0);
-        let line_height = config.line_height.unwrap_or(1.8);
-        let first_line_indent = if config.first_line_indent.unwrap_or(true) { "2em" } else { "0pt" };
-        let justify = if config.justify.unwrap_or(true) { "true" } else { "false" };
-        let bg_color_expr = match &config.bg_color {
-            Some(c) if !c.trim().is_empty() => format!("rgb(\"{}\")", c.trim()),
-            _ => "none".to_string(),
-        };
+    let (width_expr, height_expr) = match config.auto_dimension.as_deref() {
+        Some("height") => {
+            let w = config.width.filter(|&v| v > 20.0).unwrap_or(1080.0);
+            (format!("{}pt", w), "auto".to_string())
+        }
+        Some("width") => {
+            let target_h = config.height.filter(|&v| v > 20.0).unwrap_or(1440.0);
+            let font_size = config.font_size.unwrap_or(24.0);
+            let line_height = config.line_height.unwrap_or(1.8);
+            let first_line_indent = if config.first_line_indent.unwrap_or(true) { "2em" } else { "0pt" };
+            let justify = if config.justify.unwrap_or(true) { "true" } else { "false" };
+            let bg_color_expr = match &config.bg_color {
+                Some(c) if !c.trim().is_empty() => format!("rgb(\"{}\")", c.trim()),
+                _ => "none".to_string(),
+            };
 
-        let best_w = find_optimal_width(
-            &mut world,
-            template,
-            target_h,
-            &safe_content,
-            &title_escaped,
-            &author_escaped,
-            &source_escaped,
-            &font_family_escaped,
-            font_size,
-            line_height,
-            &bg_color_expr,
-            first_line_indent,
-            justify,
-        );
-        (format!("{}pt", best_w), format!("{}pt", target_h))
-    } else {
-        let w = config.width.unwrap_or(1080.0).max(200.0);
-        let h = config.height.unwrap_or(1440.0).max(200.0);
-        (format!("{}pt", w), format!("{}pt", h))
+            let best_w = find_optimal_width(
+                &mut world,
+                template,
+                target_h,
+                &safe_content,
+                &title_escaped,
+                &author_escaped,
+                &source_escaped,
+                &font_family_escaped,
+                font_size,
+                line_height,
+                &bg_color_expr,
+                first_line_indent,
+                justify,
+            );
+            (format!("{}pt", best_w), format!("{}pt", target_h))
+        }
+        _ => {
+            let w = config.width.filter(|&v| v > 20.0).unwrap_or(1080.0);
+            let h = config.height.filter(|&v| v > 20.0).unwrap_or(1440.0);
+            (format!("{}pt", w), format!("{}pt", h))
+        }
     };
 
     let font_size = config.font_size.unwrap_or(24.0);

@@ -30,12 +30,13 @@ export default function CardPreview({ content, title, author, source = '', theme
         const svg = await renderCardToSvg(content, title, author, source, theme, config)
         if (currentSeq === renderSeq.current) {
           setSvgContent(svg)
-          const match = svg.match(/viewBox=["']0\s+0\s+([\d.]+)\s+([\d.]+)["']/)
+          const match = svg.match(/viewBox=["']\s*([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s*["']/)
           if (match) {
-            setDimensions({
-              width: Math.round(parseFloat(match[1])),
-              height: Math.round(parseFloat(match[2])),
-            })
+            const w = Math.round(parseFloat(match[3]))
+            const h = Math.round(parseFloat(match[4]))
+            if (w > 1 && h > 1) {
+              setDimensions({ width: w, height: h })
+            }
           }
           setIsRendering(false)
         }
