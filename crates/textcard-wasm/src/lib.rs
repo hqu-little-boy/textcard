@@ -19,11 +19,23 @@ fn get_world() -> std::sync::MutexGuard<'static, CardWorld> {
     WORLD.get_or_init(|| Mutex::new(CardWorld::new())).lock().unwrap()
 }
 
+fn load_default_fonts(world: &mut CardWorld) {
+    let serif_bytes = include_bytes!("../fonts/DejaVuSerif.ttf");
+    if let Some(font) = Font::new(Bytes::new(serif_bytes.to_vec()), 0) {
+        world.add_font(font);
+    }
+    let sans_bytes = include_bytes!("../fonts/DejaVuSans.ttf");
+    if let Some(font) = Font::new(Bytes::new(sans_bytes.to_vec()), 0) {
+        world.add_font(font);
+    }
+}
+
 #[wasm_bindgen]
 pub fn init() {
     console_error_panic_hook::set_once();
     let mut world = get_world();
     load_templates(&mut world);
+    load_default_fonts(&mut world);
 }
 
 #[wasm_bindgen]
@@ -164,7 +176,12 @@ fn prepare_world_for_render(
     let title = if show_title { config.title.unwrap_or_default() } else { String::new() };
     let author = if show_author { config.author.unwrap_or_default() } else { String::new() };
     let source = if show_source { config.source.unwrap_or_default() } else { String::new() };
-    let font_family = config.font_family.unwrap_or_else(|| "Serif".to_string());
+    let font_family = match config.font_family.as_deref() {
+        Some("sans") | Some("Sans") | Some("sans-serif") | Some("system") => "DejaVu Sans".to_string(),
+        Some("serif") | Some("Serif") | Some("kai") => "DejaVu Serif".to_string(),
+        Some(f) if !f.trim().is_empty() => f.trim().to_string(),
+        _ => "DejaVu Serif".to_string(),
+    };
 
     let title_escaped = title.replace('\\', "\\\\").replace('"', "\\\"");
     let author_escaped = author.replace('\\', "\\\\").replace('"', "\\\"");
@@ -282,6 +299,7 @@ pub fn render_card(content: &str, template: &str, config_json: &str) -> Result<V
     {
         let mut world = get_world();
         load_templates(&mut world);
+        load_default_fonts(&mut world);
     }
 
     prepare_world_for_render(content, template, config_json)?;
@@ -308,6 +326,7 @@ pub fn render_card_svg(content: &str, template: &str, config_json: &str) -> Resu
     {
         let mut world = get_world();
         load_templates(&mut world);
+        load_default_fonts(&mut world);
     }
 
     prepare_world_for_render(content, template, config_json)?;
@@ -332,6 +351,7 @@ pub fn get_page_count(content: &str, template: &str, config_json: &str) -> Resul
     {
         let mut world = get_world();
         load_templates(&mut world);
+        load_default_fonts(&mut world);
     }
 
     prepare_world_for_render(content, template, config_json)?;
@@ -349,6 +369,7 @@ pub fn render_page(content: &str, template: &str, config_json: &str, page_idx: u
     {
         let mut world = get_world();
         load_templates(&mut world);
+        load_default_fonts(&mut world);
     }
 
     prepare_world_for_render(content, template, config_json)?;

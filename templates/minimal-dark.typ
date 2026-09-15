@@ -22,7 +22,7 @@
     fill: page-bg,
   )
   set text(
-    font: (font-family, "Droid Sans Fallback"),
+    font: (font-family, "DejaVu Sans", "DejaVu Serif", "Droid Sans Fallback"),
     size: font-size,
     fill: rgb("#c9d1d9"),
   )

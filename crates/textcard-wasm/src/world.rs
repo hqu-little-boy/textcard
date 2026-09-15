@@ -50,6 +50,9 @@ impl CardWorld {
     }
 
     pub fn add_font(&mut self, font: Font) {
+        if self.fonts.iter().any(|f| f.info() == font.info()) {
+            return;
+        }
         self.fonts.push(font);
         // Rebuild the font book
         self.book = typst::utils::LazyHash::new(FontBook::from_fonts(self.fonts.iter()));
