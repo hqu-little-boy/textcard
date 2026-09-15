@@ -9,11 +9,12 @@ interface ExportBarProps {
   content: string
   title: string
   author: string
+  source?: string
   theme: Theme
   config: CardConfig
 }
 
-export default function ExportBar({ content, title, author, theme, config }: ExportBarProps) {
+export default function ExportBar({ content, title, author, source = '', theme, config }: ExportBarProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [copied, setCopied] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -27,7 +28,7 @@ export default function ExportBar({ content, title, author, theme, config }: Exp
     setIsExporting(true)
     setErrorMsg(null)
     try {
-      const blob = await renderCardToPng(content, title, author, theme, config)
+      const blob = await renderCardToPng(content, title, author, source, theme, config)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -48,7 +49,7 @@ export default function ExportBar({ content, title, author, theme, config }: Exp
     setIsExporting(true)
     setErrorMsg(null)
     try {
-      const svg = await renderCardToSvg(content, title, author, theme, config)
+      const svg = await renderCardToSvg(content, title, author, source, theme, config)
       const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -70,7 +71,7 @@ export default function ExportBar({ content, title, author, theme, config }: Exp
     setIsExporting(true)
     setErrorMsg(null)
     try {
-      const blob = await renderCardToPng(content, title, author, theme, config)
+      const blob = await renderCardToPng(content, title, author, source, theme, config)
       await navigator.clipboard.write([
         new ClipboardItem({
           'image/png': blob,

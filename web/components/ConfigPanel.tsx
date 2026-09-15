@@ -84,6 +84,7 @@ export default function ConfigPanel({ config, setConfig }: ConfigPanelProps) {
         {[
           { key: 'showTitle', label: '显示标题' },
           { key: 'showAuthor', label: '显示作者' },
+          { key: 'showSource', label: '显示出处 / 专栏' },
           { key: 'firstLineIndent', label: '首行缩进' },
           { key: 'justify', label: '两端对齐' },
         ].map(({ key, label }) => (

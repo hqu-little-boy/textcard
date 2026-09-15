@@ -8,6 +8,7 @@ export interface CardConfig {
   bgColor: string;
   showTitle: boolean;
   showAuthor: boolean;
+  showSource: boolean;
   firstLineIndent: boolean;
   justify: boolean;
 }

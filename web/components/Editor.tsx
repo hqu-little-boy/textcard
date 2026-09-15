@@ -6,7 +6,7 @@ import ConfigPanel from './ConfigPanel'
 import CardPreview from './CardPreview'
 import ExportBar from './ExportBar'
 import { CardConfig, Theme } from './types'
-import { Type, Link as LinkIcon, Sparkles, Loader2, CheckCircle2, AlertCircle, Bookmark } from 'lucide-react'
+import { Type, Link as LinkIcon, Sparkles, Loader2, CheckCircle2, AlertCircle, Bookmark, XCircle } from 'lucide-react'
 
 const PRESETS = [
   {
@@ -24,14 +24,14 @@ const PRESETS = [
 人生代代无穷已，江月年年望相似。`,
   },
   {
-    label: '名家散文',
-    title: '荷塘月色 (节选)',
-    author: '朱自清',
-    source: '散文集',
+    label: '纯正文随笔',
+    title: '',
+    author: '',
+    source: '',
     theme: 'literary-paper' as Theme,
-    content: `曲曲折折的荷塘上面，弥望的是田田的叶子。叶子出水很高，像亭亭的舞女的裙。层层的叶子中间，零星地点缀着些白花，有袅娜地开着的，有羞涩地打着朵儿的；正如一粒粒的明珠，又如碧天里的星星，又如刚出浴的美人。
+    content: `万物皆有裂痕，那是光照进来的地方。
 
-微风过处，送来缕缕清香，仿佛远处高楼上渺茫的歌声似的。`,
+不必苛求所有事情都有标题与作者，一段纯粹沉静的文字本身就拥有打动人心的力量。把时间留给文字与审美，简简单单，亦是圆满。`,
   },
   {
     label: '小红书干货',
@@ -46,6 +46,16 @@ const PRESETS = [
 3️⃣ 场景化关联：知识不挂载到真实场景，就只是一堆无用碎片。
 
 收藏起来，下周开始用新方法复盘！`,
+  },
+  {
+    label: '名家散文',
+    title: '荷塘月色 (节选)',
+    author: '朱自清',
+    source: '散文集',
+    theme: 'literary-paper' as Theme,
+    content: `曲曲折折的荷塘上面，弥望的是田田的叶子。叶子出水很高，像亭亭的舞女的裙。层层的叶子中间，零星地点缀着些白花，有袅娜地开着的，有羞涩地打着朵儿的；正如一粒粒的明珠，又如碧天里的星星，又如刚出浴的美人。
+
+微风过处，送来缕缕清香，仿佛远处高楼上渺茫的歌声似的。`,
   },
   {
     label: '科技思考',
@@ -80,6 +90,7 @@ export default function Editor() {
     bgColor: '#ffffff',
     showTitle: true,
     showAuthor: true,
+    showSource: true,
     firstLineIndent: true,
     justify: true,
   })
@@ -116,6 +127,14 @@ export default function Editor() {
     setTheme(p.theme)
   }
 
+  const clearOptionalMeta = () => {
+    setTitle('')
+    setAuthor('')
+    setSource('')
+  }
+
+  const hasOptionalMeta = Boolean(title.trim() || author.trim() || source.trim())
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Left Panel: Input & Config */}
@@ -150,7 +169,7 @@ export default function Editor() {
           {/* Preset Chips */}
           <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 text-xs">
             <span className="text-zinc-500 flex items-center gap-1 shrink-0">
-              <Bookmark size={12} /> 快速范例:
+              <Bookmark size={12} /> 预设风格:
             </span>
             {PRESETS.map((p) => (
               <button
@@ -166,12 +185,18 @@ export default function Editor() {
           {/* Input Area */}
           <div className="space-y-4">
             {activeTab === 'text' ? (
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="在此输入或粘贴文章正文、散文诗歌、读书笔记（支持 Markdown 语法）..."
-                className="w-full h-52 bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none transition-all leading-relaxed"
-              />
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5 flex justify-between">
+                  <span>正文内容 (必填，支持 Markdown 语法)</span>
+                  <span className="text-zinc-500">{content.length} 字</span>
+                </label>
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="在此输入或粘贴正文内容、诗歌、随笔..."
+                  className="w-full h-48 bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none transition-all leading-relaxed"
+                />
+              </div>
             ) : (
               <div className="space-y-3">
                 <div className="relative">
@@ -202,7 +227,7 @@ export default function Editor() {
                 </div>
 
                 <div className="flex flex-wrap gap-1.5 text-[11px] text-zinc-400">
-                  <span className="text-zinc-500">已支持平台:</span>
+                  <span className="text-zinc-500">支持平台:</span>
                   <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-300">微信公众号</span>
                   <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-300">知乎专栏/回答</span>
                   <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-300">语雀公开文档</span>
@@ -226,36 +251,58 @@ export default function Editor() {
               </div>
             )}
 
-            {/* Metadata Fields */}
-            <div className="grid grid-cols-2 gap-4 pt-1">
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">文章标题</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
-                />
+            {/* Optional Metadata Header */}
+            <div className="pt-2 border-t border-zinc-800/80">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-zinc-400">
+                  卡片附加信息 <span className="text-zinc-500 font-normal">(全部可选，留空则不渲染)</span>
+                </span>
+                {hasOptionalMeta && (
+                  <button
+                    type="button"
+                    onClick={clearOptionalMeta}
+                    className="text-[11px] text-zinc-400 hover:text-rose-400 flex items-center gap-1 transition-colors"
+                  >
+                    <XCircle size={12} />
+                    清空附加信息
+                  </button>
+                )}
               </div>
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">作者署名</label>
-                <input
-                  type="text"
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">出处 / 书籍 / 专栏 (可选)</label>
-              <input
-                type="text"
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
-              />
+              {/* Metadata Fields */}
+              <div className="grid grid-cols-2 gap-4 mb-3">
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1">标题 (可选)</label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="留空则不显示标题"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1">作者署名 (可选)</label>
+                  <input
+                    type="text"
+                    value={author}
+                    onChange={(e) => setAuthor(e.target.value)}
+                    placeholder="留空则不显示署名与印章"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-zinc-400 mb-1">出处 / 书籍 / 专栏 (可选)</label>
+                <input
+                  type="text"
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                  placeholder="如《全唐诗》或专栏名称，留空不显示"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -272,10 +319,18 @@ export default function Editor() {
             content={content}
             title={title}
             author={author}
+            source={source}
             theme={theme}
             config={config}
           />
-          <ExportBar content={content} title={title} author={author} theme={theme} config={config} />
+          <ExportBar
+            content={content}
+            title={title}
+            author={author}
+            source={source}
+            theme={theme}
+            config={config}
+          />
         </div>
       </div>
     </div>

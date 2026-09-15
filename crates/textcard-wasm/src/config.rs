@@ -8,6 +8,10 @@ pub struct CardConfig {
     pub height: f64,
     pub title: Option<String>,
     pub author: Option<String>,
+    pub source: Option<String>,
+    pub show_title: Option<bool>,
+    pub show_author: Option<bool>,
+    pub show_source: Option<bool>,
     pub font_family: Option<String>,
 }
 
@@ -21,6 +25,10 @@ impl Default for CardConfig {
             height: default_height(),
             title: None,
             author: None,
+            source: None,
+            show_title: Some(true),
+            show_author: Some(true),
+            show_source: Some(true),
             font_family: None,
         }
     }

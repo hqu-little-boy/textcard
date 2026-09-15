@@ -3,6 +3,7 @@
   height: 1440pt,
   title: "",
   author: "",
+  source: "",
   font-family: "Sans-Serif",
   body
 ) = {
@@ -21,34 +22,54 @@
     leading: 1.5em,
   )
 
-  // Top header area
-  rect(
-    width: 100%,
-    height: 15%,
-    fill: rgb("#FF6B6B"),
-    inset: (x: 60pt, y: 40pt)
-  )[
-    #align(horizon)[
-      #text(size: 48pt, weight: "bold", fill: white, title)
+  // Top header area (only if title is provided)
+  if title != "" {
+    rect(
+      width: 100%,
+      fill: rgb("#FF6B6B"),
+      inset: (x: 60pt, y: 44pt)
+    )[
+      #align(center + horizon)[
+        #text(size: 46pt, weight: "bold", fill: white, title)
+      ]
     ]
-  ]
+  }
 
   // Main content area
-  pad(x: 60pt, y: 60pt)[
+  pad(
+    left: 60pt,
+    right: 60pt,
+    top: if title != "" { 48pt } else { 80pt },
+    bottom: if author != "" or source != "" { 40pt } else { 80pt }
+  )[
     #body
   ]
 
-  // Footer
-  align(bottom)[
-    #pad(x: 60pt, y: 40pt)[
-      #grid(
-        columns: (auto, auto),
-        gutter: 20pt,
-        circle(radius: 20pt, fill: rgb("#cccccc")),
-        align(horizon)[
-          #text(size: 24pt, weight: "bold", author)
-        ]
-      )
+  // Footer (only if author or source is provided)
+  if author != "" or source != "" {
+    align(bottom)[
+      #pad(x: 60pt, y: 36pt)[
+        #grid(
+          columns: (1fr, auto),
+          align(left + horizon)[
+            #if source != "" [
+              #text(size: 22pt, fill: rgb("#777777"))[来源: #source]
+            ]
+          ],
+          align(right + horizon)[
+            #if author != "" [
+              #grid(
+                columns: (auto, auto),
+                gutter: 14pt,
+                circle(radius: 16pt, fill: rgb("#FF6B6B")),
+                align(horizon)[
+                  #text(size: 24pt, weight: "bold", author)
+                ]
+              )
+            ]
+          ]
+        )
+      ]
     ]
-  ]
+  }
 }

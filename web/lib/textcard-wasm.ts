@@ -35,7 +35,7 @@ export async function initTextcardWasm() {
   return initPromise
 }
 
-function buildConfigJson(title: string, author: string, config: CardConfig) {
+function buildConfigJson(title: string, author: string, source: string, config: CardConfig) {
   let width = 1080
   let height = 1440
 
@@ -53,8 +53,12 @@ function buildConfigJson(title: string, author: string, config: CardConfig) {
   return JSON.stringify({
     width,
     height,
-    title: config.showTitle ? title : '',
-    author: config.showAuthor ? author : '',
+    title: config.showTitle ? title.trim() : '',
+    author: config.showAuthor ? author.trim() : '',
+    source: config.showSource ? source.trim() : '',
+    show_title: config.showTitle,
+    show_author: config.showAuthor,
+    show_source: config.showSource,
     font_family: config.fontFamily,
     font_size: config.fontSize,
     line_height: config.lineHeight,
@@ -68,11 +72,12 @@ export async function renderCardToPng(
   content: string,
   title: string,
   author: string,
+  source: string,
   template: Theme,
   config: CardConfig
 ): Promise<Blob> {
   const wasm = await initTextcardWasm()
-  const configJson = buildConfigJson(title, author, config)
+  const configJson = buildConfigJson(title, author, source, config)
   const bytes = wasm.render_card(content, template, configJson)
   return new Blob([bytes], { type: 'image/png' })
 }
@@ -81,11 +86,12 @@ export async function renderCardToSvg(
   content: string,
   title: string,
   author: string,
+  source: string,
   template: Theme,
   config: CardConfig
 ): Promise<string> {
   const wasm = await initTextcardWasm()
-  const configJson = buildConfigJson(title, author, config)
+  const configJson = buildConfigJson(title, author, source, config)
   return wasm.render_card_svg(content, template, configJson)
 }
 
@@ -93,11 +99,12 @@ export async function getPageCount(
   content: string,
   title: string,
   author: string,
+  source: string,
   template: Theme,
   config: CardConfig
 ): Promise<number> {
   const wasm = await initTextcardWasm()
-  const configJson = buildConfigJson(title, author, config)
+  const configJson = buildConfigJson(title, author, source, config)
   return wasm.get_page_count(content, template, configJson)
 }
 
@@ -105,12 +112,13 @@ export async function renderPageToPng(
   content: string,
   title: string,
   author: string,
+  source: string,
   template: Theme,
   config: CardConfig,
   pageIndex: number
 ): Promise<Blob> {
   const wasm = await initTextcardWasm()
-  const configJson = buildConfigJson(title, author, config)
+  const configJson = buildConfigJson(title, author, source, config)
   const bytes = wasm.render_page(content, template, configJson, pageIndex)
   return new Blob([bytes], { type: 'image/png' })
 }

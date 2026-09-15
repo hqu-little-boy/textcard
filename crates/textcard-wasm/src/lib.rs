@@ -50,9 +50,19 @@ fn prepare_world_for_render(
 
     let main_id = world::make_file_id("/main.typ");
 
-    let title = config.title.unwrap_or_default();
-    let author = config.author.unwrap_or_default();
+    let show_title = config.show_title.unwrap_or(true);
+    let show_author = config.show_author.unwrap_or(true);
+    let show_source = config.show_source.unwrap_or(true);
+
+    let title = if show_title { config.title.unwrap_or_default() } else { String::new() };
+    let author = if show_author { config.author.unwrap_or_default() } else { String::new() };
+    let source = if show_source { config.source.unwrap_or_default() } else { String::new() };
     let font_family = config.font_family.unwrap_or_else(|| "Serif".to_string());
+
+    let title_escaped = title.replace('\\', "\\\\").replace('"', "\\\"");
+    let author_escaped = author.replace('\\', "\\\\").replace('"', "\\\"");
+    let source_escaped = source.replace('\\', "\\\\").replace('"', "\\\"");
+    let font_family_escaped = font_family.replace('\\', "\\\\").replace('"', "\\\"");
 
     let typst_source = format!(
         r#"
@@ -62,6 +72,7 @@ fn prepare_world_for_render(
   height: {height}pt,
   title: "{title}",
   author: "{author}",
+  source: "{source}",
   font-family: "{font_family}",
 )
 
@@ -70,9 +81,10 @@ fn prepare_world_for_render(
         template = template,
         width = config.width,
         height = config.height,
-        title = title,
-        author = author,
-        font_family = font_family,
+        title = title_escaped,
+        author = author_escaped,
+        source = source_escaped,
+        font_family = font_family_escaped,
         content = content
     );
 
