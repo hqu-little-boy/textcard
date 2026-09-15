@@ -1,0 +1,15 @@
+{
+  "name": "textcard-wasm",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "textcard_wasm_bg.wasm",
+    "textcard_wasm.js",
+    "textcard_wasm.d.ts"
+  ],
+  "main": "textcard_wasm.js",
+  "types": "textcard_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
