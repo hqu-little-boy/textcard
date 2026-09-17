@@ -18,6 +18,88 @@
   }
 }
 
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-zinc-800 rounded-full hover:bg-zinc-700 transition-colors;
+}
+
+/* Custom Selection Highlight */
+::selection {
+  @apply bg-indigo-500/30 text-indigo-100;
+}
+
+/* Glass-morphism Utilities */
+.glass-panel {
+  @apply bg-zinc-900/60 backdrop-blur-xl border border-zinc-800/60;
+}
+
+/* Carbon-style Gradient Animation */
+@keyframes gradient-xy {
+  0%, 100% {
+    background-size: 400% 400%;
+    background-position: 0% 0%;
+  }
+  50% {
+    background-size: 400% 400%;
+    background-position: 100% 100%;
+  }
+}
+.carbon-gradient {
+  background: linear-gradient(-45deg, #4f46e5, #ec4899, #3b82f6, #10b981);
+  animation: gradient-xy 15s ease infinite;
+}
+
+/* Carbon-style Checkerboard Pattern */
+.checkerboard {
+  background-image: linear-gradient(45deg, #18181b 25%, transparent 25%),
+    linear-gradient(-45deg, #18181b 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #18181b 75%),
+    linear-gradient(-45deg, transparent 75%, #18181b 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Dot Grid Pattern */
+.dot-grid {
+  background-image: radial-gradient(#3f3f46 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Refined Range Input */
+input[type=range] {
+  -webkit-appearance: none;
+  @apply bg-transparent h-1.5 w-full cursor-pointer;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  @apply w-full h-1.5 bg-zinc-800 rounded-full border border-zinc-900/50;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  @apply h-4 w-4 bg-zinc-200 rounded-full border-[3px] border-zinc-900 shadow-sm mt-[-5px] transition-transform hover:scale-110 active:scale-95;
+}
+input[type=range]:focus::-webkit-slider-thumb {
+  @apply ring-2 ring-indigo-500/50 ring-offset-2 ring-offset-zinc-950;
+}
+
+/* Custom Focus Ring */
+.focus-ring {
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950;
+}
+
+/* Subtle Noise Texture */
+.noise-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  pointer-events: none;
+}
+
 .theme-literary-paper {
   background-color: #f4f1ea;
   color: #333333;

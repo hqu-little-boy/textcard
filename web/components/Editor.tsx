@@ -7,7 +7,8 @@ import CardPreview from './CardPreview'
 import ExportBar from './ExportBar'
 import { CardConfig, Theme } from './types'
 import { initTextcardWasm } from '@/lib/textcard-wasm'
-import { Type, Link as LinkIcon, Sparkles, Loader2, CheckCircle2, AlertCircle, Bookmark, XCircle } from 'lucide-react'
+import { Type, Link as LinkIcon, Sparkles, Loader2, CheckCircle2, AlertCircle, Bookmark, XCircle, FileText, ChevronDown, ChevronRight } from 'lucide-react'
+import clsx from 'clsx'
 
 const PRESETS = [
   {
@@ -78,6 +79,8 @@ export default function Editor() {
   const [author, setAuthor] = useState(PRESETS[0].author)
   const [source, setSource] = useState(PRESETS[0].source)
   const [theme, setTheme] = useState<Theme>(PRESETS[0].theme)
+  
+  const [isMetaExpanded, setIsMetaExpanded] = useState(false)
 
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractError, setExtractError] = useState<string | null>(null)
@@ -143,49 +146,63 @@ export default function Editor() {
   }
 
   const hasOptionalMeta = Boolean(title.trim() || author.trim() || source.trim())
+  
+  // Helper to get a tiny color dot for presets
+  const getThemeColorClass = (presetTheme: Theme) => {
+    switch (presetTheme) {
+      case 'literary-paper': return 'bg-[#f4f1ea]'
+      case 'xiaohongshu': return 'bg-red-500'
+      case 'minimal-dark': return 'bg-zinc-800'
+      case 'newspaper': return 'bg-[#e8e3d3]'
+      default: return 'bg-zinc-500'
+    }
+  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
       {/* Left Panel: Input & Config */}
       <div className="lg:col-span-5 space-y-6 flex flex-col">
-        <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 md:p-6 shadow-sm">
-          {/* Tabs */}
-          <div className="flex border-b border-zinc-800 mb-6">
+        <div className="glass-panel rounded-2xl p-4 md:p-6 shadow-xl">
+          {/* Segmented Control Tabs */}
+          <div className="flex p-1 bg-zinc-950/80 rounded-xl mb-6 border border-zinc-800/80 shadow-inner">
             <button
               onClick={() => setActiveTab('text')}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={clsx(
+                "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-medium rounded-lg transition-all duration-200",
                 activeTab === 'text'
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-zinc-400 hover:text-zinc-200'
-              }`}
+                  ? "bg-zinc-800/90 text-zinc-100 shadow-sm border border-zinc-700"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 border border-transparent"
+              )}
             >
-              <Type size={16} />
-              粘贴文本
+              <Type size={14} />
+              直接编写文本
             </button>
             <button
               onClick={() => setActiveTab('url')}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={clsx(
+                "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-medium rounded-lg transition-all duration-200",
                 activeTab === 'url'
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-zinc-400 hover:text-zinc-200'
-              }`}
+                  ? "bg-zinc-800/90 text-zinc-100 shadow-sm border border-zinc-700"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 border border-transparent"
+              )}
             >
-              <LinkIcon size={16} />
+              <LinkIcon size={14} />
               URL 一键抓取
             </button>
           </div>
 
           {/* Preset Chips */}
-          <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 text-xs">
-            <span className="text-zinc-500 flex items-center gap-1 shrink-0">
-              <Bookmark size={12} /> 预设风格:
+          <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-2 scrollbar-hide">
+            <span className="text-zinc-500 flex items-center gap-1 shrink-0 text-xs font-medium mr-1">
+              <Bookmark size={12} /> 灵感预设:
             </span>
             {PRESETS.map((p) => (
               <button
                 key={p.label}
                 onClick={() => applyPreset(p)}
-                className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-full border border-zinc-700 transition-colors whitespace-nowrap"
+                className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full border border-zinc-700/50 transition-all text-[11px] whitespace-nowrap flex items-center gap-1.5 hover:shadow-sm focus-ring"
               >
+                <span className={clsx("w-2 h-2 rounded-full shadow-inner", getThemeColorClass(p.theme))}></span>
                 {p.label}
               </button>
             ))}
@@ -194,32 +211,37 @@ export default function Editor() {
           {/* Input Area */}
           <div className="space-y-4">
             {activeTab === 'text' ? (
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5 flex justify-between">
-                  <span>正文内容 (必填，支持 Markdown 语法)</span>
-                  <span className="text-zinc-500">{content.length} 字</span>
-                </label>
-                <textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="在此输入或粘贴正文内容、诗歌、随笔..."
-                  className="w-full h-48 bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none transition-all leading-relaxed"
-                />
+              <div className="relative group">
+                <div className="flex justify-between items-end mb-2 px-1">
+                  <label className="text-xs font-medium text-zinc-300 flex items-center gap-1.5">
+                    <FileText size={14} className="text-zinc-500" />正文内容
+                  </label>
+                  <span className="text-[10px] text-zinc-500 bg-zinc-900 px-2 py-0.5 rounded-full border border-zinc-800">{content.length} 字</span>
+                </div>
+                <div className="relative">
+                  <textarea
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="在此输入或粘贴正文内容、诗歌、随笔... 支持 Markdown 语法"
+                    className="w-full h-56 bg-zinc-950/80 border border-zinc-800 rounded-xl p-5 text-zinc-200 placeholder-zinc-600 focus-ring resize-none transition-all leading-relaxed shadow-inner"
+                  />
+                  <div className="absolute inset-0 rounded-xl pointer-events-none ring-1 ring-inset ring-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                </div>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4 bg-zinc-950/50 p-4 rounded-xl border border-zinc-800/80 shadow-inner">
                 <div className="relative">
                   <input
                     type="url"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="粘贴公众号、知乎、语雀、Medium 或博客链接..."
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3.5 pr-28 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3.5 pr-28 text-zinc-200 placeholder-zinc-500 focus-ring transition-all text-sm shadow-inner"
                   />
                   <button
                     onClick={handleExtractUrl}
                     disabled={isExtracting || !url.trim()}
-                    className="absolute right-2 top-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
+                    className="absolute right-1.5 top-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-md text-xs font-medium flex items-center gap-1.5 transition-all shadow-sm"
                   >
                     {isExtracting ? (
                       <>
@@ -229,30 +251,30 @@ export default function Editor() {
                     ) : (
                       <>
                         <Sparkles size={13} />
-                        一键提取
+                        智能提取
                       </>
                     )}
                   </button>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 text-[11px] text-zinc-400">
-                  <span className="text-zinc-500">支持平台:</span>
-                  <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-300">微信公众号</span>
-                  <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-300">知乎专栏/回答</span>
-                  <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-300">语雀公开文档</span>
-                  <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-300">Medium</span>
-                  <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-300">通用文章</span>
+                <div className="flex flex-wrap gap-1.5 text-[10px] text-zinc-400">
+                  <span className="text-zinc-500 py-0.5">支持平台:</span>
+                  <span className="px-1.5 py-0.5 bg-zinc-800/80 rounded-md border border-zinc-700/50 text-zinc-300">微信公众号</span>
+                  <span className="px-1.5 py-0.5 bg-zinc-800/80 rounded-md border border-zinc-700/50 text-zinc-300">知乎专栏/回答</span>
+                  <span className="px-1.5 py-0.5 bg-zinc-800/80 rounded-md border border-zinc-700/50 text-zinc-300">语雀公开文档</span>
+                  <span className="px-1.5 py-0.5 bg-zinc-800/80 rounded-md border border-zinc-700/50 text-zinc-300">Medium</span>
+                  <span className="px-1.5 py-0.5 bg-zinc-800/80 rounded-md border border-zinc-700/50 text-zinc-300">通用文章</span>
                 </div>
 
                 {extractError && (
-                  <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-lg flex items-center gap-2 text-xs text-red-300">
+                  <div className="p-3 bg-rose-950/40 border border-rose-900/60 rounded-lg flex items-center gap-2 text-xs text-rose-300 shadow-sm backdrop-blur-sm">
                     <AlertCircle size={14} className="shrink-0" />
                     <span>{extractError}</span>
                   </div>
                 )}
 
                 {extractSuccess && (
-                  <div className="p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-lg flex items-center gap-2 text-xs text-emerald-300">
+                  <div className="p-3 bg-emerald-950/40 border border-emerald-900/60 rounded-lg flex items-center gap-2 text-xs text-emerald-300 shadow-sm backdrop-blur-sm">
                     <CheckCircle2 size={14} className="shrink-0" />
                     <span>{extractSuccess}</span>
                   </div>
@@ -260,57 +282,76 @@ export default function Editor() {
               </div>
             )}
 
-            {/* Optional Metadata Header */}
-            <div className="pt-2 border-t border-zinc-800/80">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-zinc-400">
-                  卡片附加信息 <span className="text-zinc-500 font-normal">(全部可选，留空则不渲染)</span>
-                </span>
-                {hasOptionalMeta && (
-                  <button
-                    type="button"
-                    onClick={clearOptionalMeta}
-                    className="text-[11px] text-zinc-400 hover:text-rose-400 flex items-center gap-1 transition-colors"
-                  >
-                    <XCircle size={12} />
-                    清空附加信息
-                  </button>
-                )}
-              </div>
-
-              {/* Metadata Fields */}
-              <div className="grid grid-cols-2 gap-4 mb-3">
-                <div>
-                  <label className="block text-xs text-zinc-400 mb-1">标题 (可选)</label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="留空则不显示标题"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500"
-                  />
+            {/* Collapsible Metadata Section */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setIsMetaExpanded(!isMetaExpanded)}
+                className="w-full flex items-center justify-between p-3 bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800/80 rounded-lg transition-colors focus-ring group"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-zinc-300 group-hover:text-zinc-200">
+                    附加信息 <span className="text-zinc-500 font-normal ml-1">标题 / 作者 / 出处</span>
+                  </span>
+                  {hasOptionalMeta && !isMetaExpanded && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-xs text-zinc-400 mb-1">作者署名 (可选)</label>
-                  <input
-                    type="text"
-                    value={author}
-                    onChange={(e) => setAuthor(e.target.value)}
-                    placeholder="留空则不显示署名与印章"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500"
-                  />
+                <div className="flex items-center gap-3">
+                  {hasOptionalMeta && isMetaExpanded && (
+                    <div
+                      onClick={(e) => { e.stopPropagation(); clearOptionalMeta(); }}
+                      className="text-[10px] text-zinc-500 hover:text-rose-400 flex items-center gap-1 transition-colors px-2 py-1 bg-zinc-950 rounded-md border border-zinc-800"
+                    >
+                      <XCircle size={10} />
+                      清空
+                    </div>
+                  )}
+                  <div className="text-zinc-500 group-hover:text-zinc-300 transition-colors">
+                    {isMetaExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
                 </div>
-              </div>
+              </button>
 
-              <div>
-                <label className="block text-xs text-zinc-400 mb-1">出处 / 书籍 / 专栏 (可选)</label>
-                <input
-                  type="text"
-                  value={source}
-                  onChange={(e) => setSource(e.target.value)}
-                  placeholder="如《全唐诗》或专栏名称，留空不显示"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500"
-                />
+              <div className={clsx(
+                "overflow-hidden transition-all duration-300 ease-in-out",
+                isMetaExpanded ? "max-h-[300px] mt-3 opacity-100" : "max-h-0 opacity-0"
+              )}>
+                <div className="p-4 bg-zinc-950/50 border border-zinc-800/80 rounded-lg space-y-4 shadow-inner">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-medium text-zinc-400 mb-1.5">标题 (可选)</label>
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="留空不显示"
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-md p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus-ring transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-zinc-400 mb-1.5">作者署名 (可选)</label>
+                      <input
+                        type="text"
+                        value={author}
+                        onChange={(e) => setAuthor(e.target.value)}
+                        placeholder="留空不显示"
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-md p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus-ring transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-400 mb-1.5">出处 / 书籍 / 专栏 (可选)</label>
+                    <input
+                      type="text"
+                      value={source}
+                      onChange={(e) => setSource(e.target.value)}
+                      placeholder="如《全唐诗》或专栏名"
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-md p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus-ring transition-all"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -320,10 +361,10 @@ export default function Editor() {
       </div>
 
       {/* Right Panel: Preview & Export */}
-      <div className="lg:col-span-7 flex flex-col">
+      <div className="lg:col-span-7 flex flex-col h-full">
         <ThemeSelector currentTheme={theme} onSelect={setTheme} />
 
-        <div className="flex-grow flex flex-col">
+        <div className="flex-grow flex flex-col gap-6">
           <CardPreview
             content={content}
             title={title}

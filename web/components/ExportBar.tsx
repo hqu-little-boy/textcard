@@ -77,8 +77,7 @@ export default function ExportBar({ content, title, author, source = '', theme, 
     const pngPromise = renderCardToPng(content, title, author, source, theme, config)
 
     try {
-      // 策略 1 (推荐规范): 传入 Promise<Blob> 给 ClipboardItem
-      // 在用户点击手势当前事件循环同步调用 navigator.clipboard.write，避免异步耗时后丢失激活焦点
+      // Strategy 1: Pass Promise<Blob> to ClipboardItem
       if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
         try {
           const item = new ClipboardItem({
@@ -93,7 +92,7 @@ export default function ExportBar({ content, title, author, source = '', theme, 
         }
       }
 
-      // 策略 2: 等待渲染完毕后尝试再次写入
+      // Strategy 2: Await render and try writing again
       const blob = await pngPromise
       if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
         if (typeof window !== 'undefined') window.focus()
@@ -111,9 +110,7 @@ export default function ExportBar({ content, title, author, source = '', theme, 
     } catch (err: any) {
       console.error('Clipboard copy failed:', err)
 
-      // 策略 3: 终极降级保障
-      // 若因浏览器窗口失焦 (Document is not focused) 或权限策略导致剪贴板被拦截，
-      // 自动无缝转为下载高清 PNG 文件，不让用户操作落空
+      // Strategy 3: Fallback to direct download
       try {
         const blob = await pngPromise
         const url = URL.createObjectURL(blob)
@@ -125,10 +122,10 @@ export default function ExportBar({ content, title, author, source = '', theme, 
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
 
-        setErrorMsg('浏览器安全策略限制了后台写入剪贴板（窗口未聚焦），已为您自动保存下载高清 PNG 文件！')
+        setErrorMsg('浏览器安全策略限制了剪贴板写入，已为您自动保存高清 PNG 文件！')
         setTimeout(() => setErrorMsg(null), 5000)
       } catch (dlErr) {
-        setErrorMsg('复制到剪贴板失败，请直接点击左侧「下载高清 PNG」保存图片。')
+        setErrorMsg('复制到剪贴板失败，请直接点击「下载高清 PNG」保存图片。')
       }
     } finally {
       setIsExporting(false)
@@ -136,47 +133,48 @@ export default function ExportBar({ content, title, author, source = '', theme, 
   }
 
   return (
-    <div className="mt-6 border-t border-zinc-800 pt-5">
+    <div className="glass-panel p-4 md:p-6 rounded-2xl shadow-xl flex flex-col gap-4">
       {errorMsg && (
-        <div className="mb-3 p-2.5 bg-amber-950/40 border border-amber-800/60 rounded-lg flex items-center gap-2 text-xs text-amber-200">
+        <div className="p-3 bg-amber-950/40 border border-amber-800/60 rounded-xl flex items-center gap-2 text-xs text-amber-200 backdrop-blur-md shadow-sm">
           <AlertCircle size={14} className="shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-3">
         <button
           onClick={handleExportPng}
           disabled={isExporting}
-          className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors shadow-sm cursor-pointer"
+          className="w-full sm:flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white py-3.5 px-6 rounded-xl flex items-center justify-center gap-2.5 font-medium transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer group"
         >
-          {isExporting ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-          <span>{isExporting ? '排版生成中...' : '下载高清 PNG'}</span>
+          {isExporting ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} className="group-hover:scale-110 transition-transform" />}
+          <span className="tracking-wide">{isExporting ? '排版生成中...' : '下载高清 PNG'}</span>
         </button>
 
-        <button
-          onClick={handleExportSvg}
-          disabled={isExporting}
-          className="px-4 py-3 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-300 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
-          title="下载矢量 SVG"
-        >
-          <ImageIcon size={18} />
-          <span className="text-xs font-medium hidden sm:inline">SVG</span>
-        </button>
-
-        <button
-          onClick={handleCopyClipboard}
-          disabled={isExporting}
-          className="px-4 py-3 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-300 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
-          title="复制到剪贴板"
-        >
-          {copied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}
-          <span className="text-xs font-medium hidden sm:inline">{copied ? '已复制' : '复制'}</span>
-        </button>
+        <div className="flex w-full sm:w-auto items-center gap-3">
+          <button
+            onClick={handleCopyClipboard}
+            disabled={isExporting}
+            className="flex-1 sm:flex-none px-6 py-3.5 bg-zinc-800/80 hover:bg-zinc-700/80 disabled:opacity-50 text-zinc-200 border border-zinc-700/50 rounded-xl flex items-center justify-center gap-2.5 transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer group backdrop-blur-md"
+            title="复制图片到剪贴板"
+          >
+            {copied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} className="text-zinc-400 group-hover:text-zinc-200 transition-colors" />}
+            <span className="text-sm font-medium">{copied ? '已复制' : '复制图片'}</span>
+          </button>
+          
+          <button
+            onClick={handleExportSvg}
+            disabled={isExporting}
+            className="px-4 py-3.5 bg-zinc-800/80 hover:bg-zinc-700/80 disabled:opacity-50 text-zinc-400 hover:text-zinc-200 border border-zinc-700/50 rounded-xl flex items-center justify-center transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer backdrop-blur-md"
+            title="下载矢量 SVG"
+          >
+            <ImageIcon size={20} />
+          </button>
+        </div>
       </div>
 
-      <div className="mt-2 text-center text-[11px] text-zinc-500">
-        基于 Rust + Typst WASM 引擎渲染 · 2x Retina 高清输出 · 自动排版与标点避头尾
+      <div className="text-center text-[11px] text-zinc-500/80 font-medium tracking-wide">
+        基于 Rust + Typst WASM 引擎渲染 <span className="mx-1.5 opacity-50">·</span> 2x Retina 高清输出 <span className="mx-1.5 opacity-50">·</span> 自动排版与标点避头尾
       </div>
     </div>
   )
